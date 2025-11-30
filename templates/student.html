@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>출석 코드 입력</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+    <div class="title">출석 코드 입력</div>
+    <div class="subtitle">예: 11주차 - 11/30 (월)</div>
+
+    <form method="post" action="/student/attend">
+        <div class="label">이름</div>
+        <input class="input-box" name="student_name" placeholder="이름을 입력하세요" required>
+
+        <!-- ✅ 수업 날짜로 출결 구분 -->
+        <div class="label" style="margin-top: 14px;">수업 날짜</div>
+        <input class="input-box" type="date" name="session_date" required>
+
+        <div class="label" style="margin-top: 14px;">출석 코드 (6자리)</div>
+        <input class="input-box" name="attendance_code" maxlength="6"
+               placeholder="123456" required>
+
+        <div class="info-box">
+            교수님이 제시한 6자리 출석 코드를 입력하세요.
+        </div>
+
+        <div class="warn-box">
+            ⚠ 교내 Wifi로 출석하지 않을 시 재출결이 필요할 수 있습니다.
+        </div>
+
+        <button class="button-main" type="submit">출석 체크</button>
+    </form>
+
+    {% if result %}
+        <div class="result-box">
+            {{ result }}<br>
+            {% if ip_status_message %}
+                <span>{{ ip_status_message }}</span>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+</body>
+</html>

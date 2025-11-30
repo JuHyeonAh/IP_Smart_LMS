@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>교수용 출석 관리</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+
+    <div class="title">교수용 출석 관리</div>
+    <div class="subtitle">출석 코드 생성 · 출석 현황 · IP 주소 확인</div>
+
+    <!-- 탭 헤더 (여기선 생성 탭만 사용) -->
+    <div class="tab-bar">
+        <div class="tab active" data-target="tab-generate">출석 코드 생성</div>
+    </div>
+
+    <!-- 출석 코드 생성 + 목록 -->
+    <div id="tab-generate" class="tab-section active">
+        <h3 style="font-size:14px; margin-top:4px;">출석 코드 생성</h3>
+        <form method="post" action="/teacher/create-code">
+            <div class="label">수업 날짜</div>
+            <input class="input-box" type="date" name="session_date" required>
+
+            <div class="label" style="margin-top:10px;">유효 시간 (분)</div>
+            <input class="input-box" type="number" name="minutes_valid" value="10" min="1" max="120" required>
+
+            <button class="button-main" type="submit" style="margin-top:12px;">6자리 출석 코드 생성</button>
+        </form>
+
+        <!-- 현재 유효한 출석 코드 -->
+        {% if active_codes %}
+            <div class="result-box">
+                <b>현재 유효한 출석 코드</b><br>
+                <table class="table table-clickable">
+                    <thead>
+                    <tr>
+                        <th>수업 날짜</th>
+                        <th>출석 코드</th>
+                        <th>유효 종료</th>
+                        <th>남은 시간</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for c in active_codes %}
+                        <tr onclick="location.href='/teacher/code/{{ c._id }}'">
+                            <td>{{ c.session_date }}</td>
+                            <td>{{ c.attendance_code }}</td>
+                            <td>
+                                <span class="expires-at"
+                                      data-expiry="{{ c.valid_until.isoformat() }}">
+                                    {{ c.valid_until.strftime("%m/%d %H:%M") }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="expires-remaining">계산 중...</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <div class="hint-text">※ 행을 클릭하면 해당 코드의 출석 현황 상세 화면으로 이동합니다.</div>
+            </div>
+        {% endif %}
+
+        <!-- 지난 출석 코드 -->
+        {% if past_codes %}
+            <div class="result-box past-box">
+                <b>지난 출석</b><br>
+                <table class="table table-clickable small-table">
+                    <thead>
+                    <tr>
+                        <th>수업 날짜</th>
+                        <th>출석 코드</th>
+                        <th>유효 종료</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for p in past_codes %}
+                        <tr onclick="location.href='/teacher/code/{{ p._id }}'">
+                            <td>{{ p.session_date }}</td>
+                            <td>{{ p.attendance_code }}</td>
+                            <td>{{ p.valid_until.strftime("%m/%d %H:%M") }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <div class="hint-text">※ 지난 출석 코드도 클릭하면 출석 기록과 IP 로그를 확인할 수 있습니다.</div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    // 유효 시간 타이머 (현재 유효 코드들에만)
+    function updateCountdowns() {
+        const rows = document.querySelectorAll('.expires-at');
+        const now = new Date();
+
+        rows.forEach(span => {
+            const expiryIso = span.getAttribute('data-expiry');
+            if (!expiryIso) return;
+
+            const expiry = new Date(expiryIso);
+            const remainMs = expiry - now;
+            const target = span.parentElement.nextElementSibling?.querySelector('.expires-remaining');
+
+            if (!target) return;
+
+            if (remainMs <= 0) {
+                target.textContent = '만료됨';
+                return;
+            }
+
+            const totalSec = Math.floor(remainMs / 1000);
+            const min = String(Math.floor(totalSec / 60)).padStart(2, '0');
+            const sec = String(totalSec % 60).padStart(2, '0');
+
+            target.textContent = `${min}:${sec}`;
+        });
+    }
+
+    setInterval(updateCountdowns, 1000);
+    updateCountdowns();
+</script>
+</body>
+</html>

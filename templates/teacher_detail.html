@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>출석 코드 상세</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+
+    <div class="title">출석 코드 상세</div>
+    <div class="subtitle">{{ code.session_date }} · 코드 {{ code.attendance_code }}</div>
+
+    <a href="/teacher" class="back-link">← 출석 코드 목록으로 돌아가기</a>
+
+    <!-- 상단 요약 + 타이머 -->
+    <div class="detail-header">
+        <div class="detail-box">
+            <div class="label">출석 코드</div>
+            <div class="detail-value big">{{ code.attendance_code }}</div>
+        </div>
+        <div class="detail-box">
+            <div class="label">수업 날짜</div>
+            <div class="detail-value">{{ code.session_date }}</div>
+        </div>
+        <div class="detail-box">
+            <div class="label">상태</div>
+            <div class="detail-value">
+                {% if is_active %}
+                    <span class="badge-normal">진행 중</span>
+                {% else %}
+                    <span class="badge-suspicious">만료됨</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-box">
+            <div class="label">남은 시간</div>
+            <div class="detail-value big">
+                <span id="detail-timer"
+                      data-expiry="{{ code.valid_until.isoformat() }}">
+                    {% if is_active %}--:--{% else %}만료됨{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 출석 현황 -->
+    <div class="section-card">
+        <h3>출석 현황</h3>
+        {% if attendance_list %}
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>학생명</th>
+                    <th>IP</th>
+                    <th>IP 상태</th>
+                    <th>시간</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for a in attendance_list %}
+                    <tr>
+                        <td>{{ a.student_name }}</td>
+                        <td>{{ a.ip }}</td>
+                        <td>
+                            {% if a.ip_status == "NORMAL" %}
+                                <span class="badge-normal">정상</span>
+                            {% elif a.ip_status == "WARNING" %}
+                                <span class="badge-warning">확인 필요</span>
+                            {% else %}
+                                <span class="badge-suspicious">의심</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ a.timestamp.strftime("%m/%d %H:%M") }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-text">아직 출석한 학생이 없습니다.</div>
+        {% endif %}
+    </div>
+
+    <!-- IP 주소 확인 필요 -->
+    <div class="section-card">
+        <h3>IP 주소 확인 필요</h3>
+        {% if suspicious_list %}
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>학생명</th>
+                    <th>IP</th>
+                    <th>판정</th>
+                    <th>시간</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for s in suspicious_list %}
+                    <tr>
+                        <td>{{ s.student_name }}</td>
+                        <td>{{ s.ip }}</td>
+                        <td>{{ s.ip_status_message }}</td>
+                        <td>{{ s.timestamp.strftime("%m/%d %H:%M") }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-text">IP 확인이 필요한 출석 기록이 없습니다.</div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    // 상세 화면 타이머
+    function updateDetailTimer() {
+        const el = document.getElementById('detail-timer');
+        if (!el) return;
+
+        const expiryIso = el.getAttribute('data-expiry');
+        if (!expiryIso) return;
+
+        const expiry = new Date(expiryIso);
+        const now = new Date();
+        const remainMs = expiry - now;
+
+        if (remainMs <= 0) {
+            el.textContent = '만료됨';
+            return;
+        }
+
+        const totalSec = Math.floor(remainMs / 1000);
+        const min = String(Math.floor(totalSec / 60)).padStart(2, '0');
+        const sec = String(totalSec % 60).padStart(2, '0');
+
+        el.textContent = `${min}:${sec}`;
+    }
+
+    setInterval(updateDetailTimer, 1000);
+    updateDetailTimer();
+</script>
+</body>
+</html>
