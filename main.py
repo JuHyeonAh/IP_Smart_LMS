@@ -54,20 +54,52 @@ def classify_ip(ip: str) -> tuple[str, str]:
     return "SUSPICIOUS", "❗ 외부망 (LTE 등) 의심됨"
 
 
+async def get_active_sessions():
+    """
+    현재 유효한 출석 코드가 있는 수업(날짜) 목록을 만든다.
+    - 같은 날짜(session_date)는 한 번만 표시
+    - 각 항목에 유효 종료 시간 문자열도 같이 전달
+    """
+    now = datetime.now()
+    cursor = code_collection.find(
+        {"valid_until": {"$gt": now}}
+    ).sort("valid_until", 1)
+
+    codes = await cursor.to_list(length=100)
+
+    sessions = []
+    seen_dates = set()
+
+    for c in codes:
+        sd = c.get("session_date")
+        if sd in seen_dates:
+            continue
+        seen_dates.add(sd)
+
+        sessions.append(
+            {
+                "session_date": sd,
+                "end_str": c["valid_until"].strftime("%m/%d %H:%M"),
+            }
+        )
+
+    return sessions
+
 # --------- 학생용 --------- #
 
 @app.get("/student")
 async def student_page(request: Request):
+    sessions = await get_active_sessions()
+
     return templates.TemplateResponse(
         "student.html",
         {
             "request": request,
             "result": None,
-            "ip_status_message": None
+            "ip_status_message": None,
+            "sessions": sessions,   # ✅ 유효한 수업 목록
         }
     )
-
-
 @app.post("/student/attend")
 async def student_attend(
     request: Request,
@@ -75,7 +107,6 @@ async def student_attend(
     session_date: str = Form(...),
     attendance_code: str = Form(...)
 ):
-    # client_ip = request.client.host or "unknown"
     client_ip = get_client_ip(request)
     ip_status, ip_status_message = classify_ip(client_ip)
     now = datetime.now()  # 로컬(KST) 기준
@@ -114,15 +145,18 @@ async def student_attend(
             await attendance_collection.insert_one(attend_doc)
             result = "출석이 정상적으로 처리되었습니다."
 
+    # ✅ 다시 유효한 수업 목록 가져오기
+    sessions = await get_active_sessions()
+
     return templates.TemplateResponse(
         "student.html",
         {
             "request": request,
             "result": result,
-            "ip_status_message": ip_status_message
+            "ip_status_message": ip_status_message,
+            "sessions": sessions,
         }
     )
-
 
 # --------- 교수용 메인 화면 --------- #
 

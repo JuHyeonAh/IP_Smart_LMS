@@ -8,19 +8,42 @@
 <body>
 <div class="container">
     <div class="title">출석 코드 입력</div>
-    <div class="subtitle">예: 11주차 - 11/30 (월)</div>
+    <div class="subtitle">수업을 선택한 뒤, 출석 코드를 입력하세요.</div>
 
     <form method="post" action="/student/attend">
+        <!-- 이름 -->
         <div class="label">이름</div>
-        <input class="input-box" name="student_name" placeholder="이름을 입력하세요" required>
+        <input
+            class="input-box"
+            name="student_name"
+            placeholder="이름을 입력하세요"
+            required
+        >
 
-        <!-- ✅ 수업 날짜로 출결 구분 -->
-        <div class="label" style="margin-top: 14px;">수업 날짜</div>
-        <input class="input-box" type="date" name="session_date" required>
+        <!-- ✅ 날짜 대신: 현재 유효한 수업 목록 중 선택 -->
+        <div class="label" style="margin-top: 14px;">수업 선택</div>
+        <select class="input-box" name="session_date" required>
+            {% if sessions and sessions|length > 0 %}
+                <option value="">수업(날짜)을 선택하세요</option>
+                {% for s in sessions %}
+                    <option value="{{ s.session_date }}">
+                        {{ s.session_date }} (유효 종료: {{ s.end_str }})
+                    </option>
+                {% endfor %}
+            {% else %}
+                <option value="">현재 유효한 출석 코드가 있는 수업이 없습니다</option>
+            {% endif %}
+        </select>
 
+        <!-- 출석 코드 입력 -->
         <div class="label" style="margin-top: 14px;">출석 코드 (6자리)</div>
-        <input class="input-box" name="attendance_code" maxlength="6"
-               placeholder="123456" required>
+        <input
+            class="input-box"
+            name="attendance_code"
+            maxlength="6"
+            placeholder="123456"
+            required
+        >
 
         <div class="info-box">
             교수님이 제시한 6자리 출석 코드를 입력하세요.

@@ -58,22 +58,25 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for a in attendance_list %}
-                    <tr>
-                        <td>{{ a.student_name }}</td>
-                        <td>{{ a.ip }}</td>
-                        <td>
-                            {% if a.ip_status == "NORMAL" %}
-                                <span class="badge-normal">정상</span>
-                            {% elif a.ip_status == "WARNING" %}
-                                <span class="badge-warning">확인 필요</span>
-                            {% else %}
-                                <span class="badge-suspicious">의심</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ a.timestamp.strftime("%m/%d %H:%M") }}</td>
-                    </tr>
+                {% for a in attendances %}
+                <tr>
+                    <td>{{ a.student_name }}</td>
+                    <td>{{ a.ip }}</td>
+                    <td>
+                    {% if a.ip_status == "NORMAL" %}
+                        <span class="badge-normal">정상</span>
+                    {% elif a.ip_status == "WARNING" %}
+                        <span class="badge-warning">확인 필요</span>
+                    {% elif a.ip_status == "DEV" %}
+                        <span class="badge-warning">개발용</span>
+                    {% else %}
+                        <span class="badge-suspicious">의심</span>
+                    {% endif %}
+                    </td>
+                    <td>{{ a.timestamp_str }}</td>
+                </tr>
                 {% endfor %}
+                </tbody>
                 </tbody>
             </table>
         {% else %}
