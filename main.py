@@ -11,6 +11,15 @@ from bson import ObjectId  # ✅ 코드 상세 조회용
 
 from db import attendance_collection, code_collection
 
+# --------- 시간 유틸(KST 고정) --------- #
+# 항상 "한국 시간"을 쓰기 위해, 환경/서버 시간대와 무관하게
+# UTC 기준으로 9시간을 더한 값을 사용합니다.
+KST_OFFSET = timedelta(hours=9)
+
+def now_kst() -> datetime:
+    """한국 시간(KST) 기준 현재 시각을 naive datetime으로 반환"""
+    return datetime.utcnow() + KST_OFFSET
+
 
 def get_client_ip(request: Request) -> str:
     # 클라우드(프록시 뒤)에서는 X-Forwarded-For에 실제 클라이언트 IP가 들어옴
@@ -60,7 +69,7 @@ async def get_active_sessions():
     - 같은 날짜(session_date)는 한 번만 표시
     - 각 항목에 유효 종료 시간 문자열도 같이 전달
     """
-    now = datetime.now()
+    now = now_kst()
     cursor = code_collection.find(
         {"valid_until": {"$gt": now}}
     ).sort("valid_until", 1)
@@ -101,6 +110,7 @@ async def student_page(request: Request):
             "already_attended": False,   # ✅ 기본값
         }
     )
+
 @app.post("/student/attend")
 async def student_attend(
     request: Request,
@@ -110,7 +120,7 @@ async def student_attend(
 ):
     client_ip = get_client_ip(request)
     ip_status, ip_status_message = classify_ip(client_ip)
-    now = datetime.now()  # 로컬(KST) 기준
+    now = now_kst()  # ✅ KST 기준
 
     already_attended = False  # ✅ 플래그 기본값
 
@@ -171,7 +181,7 @@ async def teacher_page(request: Request):
     - 현재 유효한 출석 코드 목록(클릭하면 상세로 이동)
     - 지난 출석 코드 목록
     """
-    now = datetime.now()
+    now = now_kst()
 
     # 아직 유효한 코드들
     active_codes_cursor = code_collection.find(
@@ -205,7 +215,7 @@ async def create_code(
     """
     code = generate_code(6)
 
-    now = datetime.now()
+    now = now_kst()  # ✅ KST 기준
     valid_until = now + timedelta(minutes=minutes_valid)
 
     doc = {
@@ -239,7 +249,7 @@ async def teacher_code_detail(request: Request, code_id: str):
     if not code_doc:
         raise HTTPException(status_code=404, detail="출석 코드 정보를 찾을 수 없습니다.")
 
-    now = datetime.now()
+    now = now_kst()
     is_active = code_doc["valid_until"] > now
 
     # 이 코드/날짜에 대한 모든 출석 기록
