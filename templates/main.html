@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>스마트 출석 시스템</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container main-container">
+    <div class="title">스마트 출석 시스템</div>
+    <div class="subtitle">IP 기반 출석 체크 · 교내 WIFI 여부 확인</div>
+
+    <div class="role-wrapper">
+        <!-- 학생용 카드 -->
+        <div class="role-card">
+            <div class="role-title">학생</div>
+            <div class="role-desc">
+                교수님이 생성한 출석 코드로<br>
+                빠르게 출석을 진행합니다.
+            </div>
+            <a href="/student" class="button-main role-button">
+                학생 출석하기
+            </a>
+        </div>
+
+        <!-- 교수용 카드 -->
+        <div class="role-card">
+            <div class="role-title">교수</div>
+            <div class="role-desc">
+                수업별 출석 코드를 생성하고<br>
+                출석 현황과 IP를 한눈에 확인합니다.
+            </div>
+            <a href="/teacher" class="button-sub role-button">
+                교수 출석 관리
+            </a>
+        </div>
+    </div>
+
+    <div class="info-box main-info">
+        이 페이지는 출석용 서비스입니다.<br>
+        • 학생: 교내 WIFI 접속 후 출석을 진행해 주세요.<br>
+        • 교수: 출석 코드 생성 후 학생들에게 코드를 안내해 주세요.
+    </div>
+</div>
+</body>
+</html>

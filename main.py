@@ -271,3 +271,17 @@ async def teacher_code_detail(request: Request, code_id: str):
             "suspicious_list": suspicious_list,
         }
     )
+
+# --------- 메인 랜딩 페이지 --------- #
+
+@app.get("/")
+async def root(request: Request):
+    """
+    메인 화면: 학생 / 교수 선택
+    """
+    return templates.TemplateResponse(
+        "main.html",
+        {
+            "request": request
+        }
+    )
