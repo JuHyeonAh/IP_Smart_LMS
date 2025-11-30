@@ -20,7 +20,7 @@
             required
         >
 
-        <!-- ✅ 날짜 대신: 현재 유효한 수업 목록 중 선택 -->
+        <!-- 수업 선택 -->
         <div class="label" style="margin-top: 14px;">수업 선택</div>
         <select class="input-box" name="session_date" required>
             {% if sessions and sessions|length > 0 %}
@@ -35,7 +35,7 @@
             {% endif %}
         </select>
 
-        <!-- 출석 코드 입력 -->
+        <!-- 출석 코드 -->
         <div class="label" style="margin-top: 14px;">출석 코드 (6자리)</div>
         <input
             class="input-box"
@@ -53,7 +53,20 @@
             ⚠ 교내 Wifi로 출석하지 않을 시 재출결이 필요할 수 있습니다.
         </div>
 
-        <button class="button-main" type="submit">출석 체크</button>
+        <!-- ✅ 이미 출석한 경우 버튼 비활성화 -->
+        <button
+            class="button-main {% if already_attended %}button-disabled{% endif %}"
+            type="submit"
+            {% if already_attended %}disabled{% endif %}
+        >
+            출석 체크
+        </button>
+
+        {% if already_attended %}
+            <div class="info-box already-box">
+                이미 이 수업에 출석하셨습니다.
+            </div>
+        {% endif %}
     </form>
 
     {% if result %}

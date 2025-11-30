@@ -6,142 +6,167 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="container">
-
-    <div class="title">출석 코드 상세</div>
-    <div class="subtitle">{{ code.session_date }} · 코드 {{ code.attendance_code }}</div>
-
+<div class="container teacher-detail">
     <a href="/teacher" class="back-link">← 출석 코드 목록으로 돌아가기</a>
 
-    <!-- 상단 요약 + 타이머 -->
-    <div class="detail-header">
-        <div class="detail-box">
-            <div class="label">출석 코드</div>
-            <div class="detail-value big">{{ code.attendance_code }}</div>
+    <div class="title-row">
+        <div>
+            <div class="title">출석 코드 상세</div>
+            <div class="subtitle">
+                {{ code.session_date }} · 코드 {{ code.attendance_code }}
+            </div>
         </div>
-        <div class="detail-box">
-            <div class="label">수업 날짜</div>
-            <div class="detail-value">{{ code.session_date }}</div>
+    </div>
+
+    <!-- 상단 요약 카드 4개 -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-label">출석 코드</div>
+            <div class="summary-value">{{ code.attendance_code }}</div>
         </div>
-        <div class="detail-box">
-            <div class="label">상태</div>
-            <div class="detail-value">
+        <div class="summary-card">
+            <div class="summary-label">수업 날짜</div>
+            <div class="summary-value">{{ code.session_date }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">상태</div>
+            <div class="summary-value">
                 {% if is_active %}
-                    <span class="badge-normal">진행 중</span>
+                    <span class="badge badge-active">진행 중</span>
                 {% else %}
-                    <span class="badge-suspicious">만료됨</span>
+                    <span class="badge badge-expired">만료됨</span>
                 {% endif %}
             </div>
         </div>
-        <div class="detail-box">
-            <div class="label">남은 시간</div>
-            <div class="detail-value big">
-                <span id="detail-timer"
-                      data-expiry="{{ code.valid_until.isoformat() }}">
-                    {% if is_active %}--:--{% else %}만료됨{% endif %}
-                </span>
+        <div class="summary-card">
+            <div class="summary-label">남은 시간</div>
+            <div class="summary-value">
+                {% if is_active %}
+                    <span id="detail-timer"
+                          data-deadline="{{ code.valid_until.isoformat() }}">
+                        계산 중...
+                    </span>
+                {% else %}
+                    <span>만료됨</span>
+                {% endif %}
             </div>
         </div>
     </div>
 
     <!-- 출석 현황 -->
     <div class="section-card">
-        <h3>출석 현황</h3>
-        {% if attendance_list %}
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>학생명</th>
-                    <th>IP</th>
-                    <th>IP 상태</th>
-                    <th>시간</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for a in attendances %}
-                <tr>
-                    <td>{{ a.student_name }}</td>
-                    <td>{{ a.ip }}</td>
-                    <td>
-                    {% if a.ip_status == "NORMAL" %}
-                        <span class="badge-normal">정상</span>
-                    {% elif a.ip_status == "WARNING" %}
-                        <span class="badge-warning">확인 필요</span>
-                    {% elif a.ip_status == "DEV" %}
-                        <span class="badge-warning">개발용</span>
-                    {% else %}
-                        <span class="badge-suspicious">의심</span>
-                    {% endif %}
-                    </td>
-                    <td>{{ a.timestamp_str }}</td>
-                </tr>
+        <div class="section-header">
+            <div class="section-title">출석 현황</div>
+        </div>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>학생명</th>
+                <th>IP</th>
+                <th>IP 상태</th>
+                <th>시간</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if attendance_list and attendance_list|length > 0 %}
+                {% for a in attendance_list %}
+                    <tr>
+                        <td>{{ a.student_name }}</td>
+                        <td>{{ a.ip }}</td>
+                        <td>
+                            {% if a.ip_status == "NORMAL" %}
+                                <span class="badge-ip badge-normal">정상</span>
+                            {% elif a.ip_status == "WARNING" %}
+                                <span class="badge-ip badge-warning">확인 필요</span>
+                            {% elif a.ip_status == "DEV" %}
+                                <span class="badge-ip badge-dev">개발용</span>
+                            {% else %}
+                                <span class="badge-ip badge-suspicious">의심</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ a.timestamp.strftime("%m/%d %H:%M") }}
+                        </td>
+                    </tr>
                 {% endfor %}
-                </tbody>
-                </tbody>
-            </table>
-        {% else %}
-            <div class="empty-text">아직 출석한 학생이 없습니다.</div>
-        {% endif %}
+            {% else %}
+                <tr>
+                    <td colspan="4" class="empty-row">
+                        아직 출석한 학생이 없습니다.
+                    </td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
     </div>
 
     <!-- IP 주소 확인 필요 -->
     <div class="section-card">
-        <h3>IP 주소 확인 필요</h3>
-        {% if suspicious_list %}
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>학생명</th>
-                    <th>IP</th>
-                    <th>판정</th>
-                    <th>시간</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for s in suspicious_list %}
+        <div class="section-header">
+            <div class="section-title">IP 주소 확인 필요</div>
+        </div>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>학생명</th>
+                <th>IP</th>
+                <th>판정</th>
+                <th>시간</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if suspicious_list and suspicious_list|length > 0 %}
+                {% for a in suspicious_list %}
                     <tr>
-                        <td>{{ s.student_name }}</td>
-                        <td>{{ s.ip }}</td>
-                        <td>{{ s.ip_status_message }}</td>
-                        <td>{{ s.timestamp.strftime("%m/%d %H:%M") }}</td>
+                        <td>{{ a.student_name }}</td>
+                        <td>{{ a.ip }}</td>
+                        <td>{{ a.ip_status_message }}</td>
+                        <td>{{ a.timestamp.strftime("%m/%d %H:%M") }}</td>
                     </tr>
                 {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <div class="empty-text">IP 확인이 필요한 출석 기록이 없습니다.</div>
-        {% endif %}
+            {% else %}
+                <tr>
+                    <td colspan="4" class="empty-row">
+                        확인이 필요한 IP 출석 내역이 없습니다.
+                    </td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
     </div>
-
 </div>
 
+<!-- 상세 화면 타이머 스크립트 -->
 <script>
-    // 상세 화면 타이머
-    function updateDetailTimer() {
-        const el = document.getElementById('detail-timer');
+    (function () {
+        const el = document.getElementById("detail-timer");
         if (!el) return;
 
-        const expiryIso = el.getAttribute('data-expiry');
-        if (!expiryIso) return;
+        const deadlineStr = el.dataset.deadline;
+        if (!deadlineStr) return;
 
-        const expiry = new Date(expiryIso);
-        const now = new Date();
-        const remainMs = expiry - now;
+        const deadline = new Date(deadlineStr);
 
-        if (remainMs <= 0) {
-            el.textContent = '만료됨';
-            return;
+        function updateTimer() {
+            const now = new Date();
+            const diff = deadline - now;
+
+            if (diff <= 0) {
+                el.textContent = "만료됨";
+                el.classList.add("timer-expired");
+                clearInterval(intervalId);
+                return;
+            }
+            const totalSec = Math.floor(diff / 1000);
+            const min = String(Math.floor(totalSec / 60)).padStart(2, "0");
+            const sec = String(totalSec % 60).padStart(2, "0");
+            el.textContent = `${min}:${sec}`;
         }
 
-        const totalSec = Math.floor(remainMs / 1000);
-        const min = String(Math.floor(totalSec / 60)).padStart(2, '0');
-        const sec = String(totalSec % 60).padStart(2, '0');
-
-        el.textContent = `${min}:${sec}`;
-    }
-
-    setInterval(updateDetailTimer, 1000);
-    updateDetailTimer();
+        updateTimer();
+        const intervalId = setInterval(updateTimer, 1000);
+    })();
 </script>
+
 </body>
 </html>

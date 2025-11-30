@@ -98,6 +98,7 @@ async def student_page(request: Request):
             "result": None,
             "ip_status_message": None,
             "sessions": sessions,   # ✅ 유효한 수업 목록
+            "already_attended": False,   # ✅ 기본값
         }
     )
 @app.post("/student/attend")
@@ -110,6 +111,8 @@ async def student_attend(
     client_ip = get_client_ip(request)
     ip_status, ip_status_message = classify_ip(client_ip)
     now = datetime.now()  # 로컬(KST) 기준
+
+    already_attended = False  # ✅ 플래그 기본값
 
     code_doc = await code_collection.find_one(
         {
@@ -132,6 +135,7 @@ async def student_attend(
 
         if existing:
             result = "이미 출석이 처리되었습니다."
+            already_attended = True   # ✅ 이미 출석
         else:
             attend_doc = {
                 "student_name": student_name,
@@ -155,6 +159,7 @@ async def student_attend(
             "result": result,
             "ip_status_message": ip_status_message,
             "sessions": sessions,
+            "already_attended": already_attended,  # ✅ 템플릿으로 전달
         }
     )
 
