@@ -21,14 +21,25 @@ def now_kst() -> datetime:
     return datetime.utcnow() + KST_OFFSET
 
 
+# def get_client_ip(request: Request) -> str:
+#     # 클라우드(프록시 뒤)에서는 X-Forwarded-For에 실제 클라이언트 IP가 들어옴
+#     xff = request.headers.get("x-forwarded-for")
+#     if xff:
+#         return xff.split(",")[0].strip()
+#     # 로컬/테스트 환경
+#     return request.client.host or "unknown"
 def get_client_ip(request: Request) -> str:
-    # 클라우드(프록시 뒤)에서는 X-Forwarded-For에 실제 클라이언트 IP가 들어옴
-    xff = request.headers.get("x-forwarded-for")
+    # Cloudflare 원본 IP
+    cf_ip = request.headers.get("CF-Connecting-IP")
+    if cf_ip:
+        return cf_ip
+
+    # 프록시 뒤 실제 IP
+    xff = request.headers.get("X-Forwarded-For")
     if xff:
         return xff.split(",")[0].strip()
-    # 로컬/테스트 환경
-    return request.client.host or "unknown"
 
+    return request.client.host
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
