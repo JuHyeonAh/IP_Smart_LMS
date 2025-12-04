@@ -6,10 +6,14 @@ from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timedelta
 import random
 import string
+import os
 
 from bson import ObjectId  # ✅ 코드 상세 조회용
 
 from db import attendance_collection, code_collection
+
+
+QR_BASE_URL = os.getenv("QR_BASE_URL", "https://qr-attendance-check.onrender.com/")
 
 # --------- 시간 유틸(KST 고정) --------- #
 # 항상 "한국 시간"을 쓰기 위해, 환경/서버 시간대와 무관하게
@@ -212,6 +216,7 @@ async def teacher_page(request: Request):
             "request": request,
             "active_codes": active_codes,
             "past_codes": past_codes,
+            "qr_base_url": QR_BASE_URL,   
         }
     )
 
